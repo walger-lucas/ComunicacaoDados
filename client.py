@@ -6,7 +6,7 @@ class Client:
         self.PORT = PORT
         self.skt= socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.isConnected = False
-        self.skt.settimeout(1)
+        self.skt.settimeout(0.1)
     
     def TryConnection(self):
         if(not self.isConnected):

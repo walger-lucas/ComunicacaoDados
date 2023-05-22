@@ -13,6 +13,10 @@ client = None
 canvas = None
 def close_window():
     print('Janela fechando')
+    if(server!=None):
+        server.CloseConnection()
+    if(client!=None):
+        client.skt.close
     window.destroy()
 def selection_handle(selection):
     global isServer

@@ -22,6 +22,7 @@ class Server:
     def CloseConnection(self):
         if (self.isConnected):
             self.conn.close()
+            self.skt.close()
             print('Conexão fechada em ', self.ender)
             self.isConnected=False
         else:
