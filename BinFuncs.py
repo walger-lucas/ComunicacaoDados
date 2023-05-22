@@ -13,12 +13,14 @@ def ToBinary(word):
 
     return bits_array
 
+#transforma de array de bits para string de bits
 def ArrayBitsToStringBits(bits_array=[]):
     s=''
     for i in bits_array:
         s+=str(i)
     return s
 
+#transforma de bits para string
 def ToString(bin_array=[]):
     text =''
     for i in range(0,len(bin_array),8):
