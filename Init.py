@@ -1,51 +1,108 @@
 import tkinter as tk
-import server as srv
-import client as cli
 import socket
-from PIL import ImageTk
+import threading
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from Graph import *
 from BinFuncs import *
 
-
+PORT = 55555
+host = 'localhost'
 server = None
 client = None
-canvas = None
+canvas,fig = None,None
+conn, ender = None, None
+isConnected,isRunning = False, True
+lineCodeArray = []
+
+#Mostra o Gráfico se houver data a mostrar, caso tenha mostrado, retira de coisas a mostrar
+def ShowLineCode():
+    global isRunning,lineCodeArray,canvas,fig
+    if lineCodeArray!=[]:
+        if(canvas!=None):
+            canvas.get_tk_widget().destroy()
+        if(fig):
+            plt.close(fig)
+        fig = Show2B1Q(text_frame,lineCodeArray)
+        canvas = FigureCanvasTkAgg(fig,text_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack()
+        lineCodeArray=[]
+
+    if(isRunning):
+        window.after(200,ShowLineCode)
+
+
+#Fecha Janela
 def close_window():
+    global isRunning
     print('Janela fechando')
-    if(server!=None):
-        server.CloseConnection()
-    if(client!=None):
-        client.skt.close
+    isRunning= False
+    try:
+        if(canvas):
+            canvas.get_tk_widget().destroy()
+        if(fig):
+            plt.close(fig)
+        if(server):
+            server.close()
+        if(client):
+            client.close()
+    except:
+        print("error")
+        pass
     window.destroy()
+
+#Seleção de Cliente ou Server
 def selection_handle(selection):
     global isServer
     if(selection == 'Server'):
         isServer=True
     elif selection =='Client':
         isServer=False
+#Espera conexão do servidor
+def WaitConnection():
+    global conn, ender,server,isConnected
+    while(isConnected==False and isRunning==True):
+        try:
+            print('Tentando Conectar')
+            conn,ender = server.accept()
+            isConnected = True
+            print('Conectou-se')
+            break
+        except: 
+            isConnected = False
+            print("Nao conseguiu conexoes.")
 
+#Botão de conexão, prepara em caso de Server ou Client
 def Iniciar():
-    
-    global server,client,isServer
-    text = entryId.get()
+    global server,client,isServer,host
+    host = entryId.get()
     ip_frame.pack_forget()
     text_frame.pack()
+    ShowLineCode()
+    window.update()
     #Seta se será server ou cliente, e remove coisas desnecessárias
     if(isServer==True):
-        server = srv.Server(text)
-        server.ListenAndWaitConnection()
-        window.geometry('400x170')
+        try:
+            server = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #TCP
+            server.settimeout(5) #5s de timeout
+            server.bind((host,PORT))
+            server.listen()
+            thread1 = threading.Thread(target=WaitConnection)
+            thread1.start()
+            window.geometry('400x170')
+        except:
+            close_window()
     else:
-        client = cli.Client(text)
-        client.TryConnection()
+        client= socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         text_label.pack_forget()
         text_entry.pack_forget()
         text_button.pack_forget()
-        Receive()
+        thread2 = threading.Thread(target=Receive)
+        thread2.start()
+    
 
 def Send():
-    global canvas
+    global canvas, isConnected, fig, lineCodeArray
     text = text_entry.get()
     text_text.config(text="Texto: "+text)
     
@@ -55,41 +112,45 @@ def Send():
     text_bin.config(text='Binário: '+ArrayBitsToStringBits(binary_array))
     text_cript.config(text='Criptografado: '+ArrayBitsToStringBits(cript_array))
     text_lineCode.config(text='2B1Q (V): '+str(lineCode_array))
-    pack = PackData(lineCode_array)
-    server.SendData(pack)
-    
-    
-    if(canvas!=None):
-        canvas.get_tk_widget().destroy()
-    canvas = Show2B1Q(text_frame,lineCode_array)
+    if isConnected:
+        pack = PackData(lineCode_array)
+        try:
+            conn.send(pack)
+        except:
+            isConnected = False
+            conn.close()
+            print("Nao conseguiu enviar o pacote.")
     window.geometry('400x500')
+    lineCodeArray=lineCode_array
 #Tenta receber os dados e mostrá-los em tela a cada 200ms.
 def Receive():
-    global canvas
-    try:
-        pack = client.ReceiveData()
-        if(pack):
-            lineCode_array = UnpackData(pack)
-            cript_array = Decode2B1Q(lineCode_array)
-            binary_array = cript_array
-            text = ToString(binary_array)
-            text_text.config(text="Texto: "+text)
-            text_bin.config(text='Binário: '+ArrayBitsToStringBits(binary_array))
-            text_cript.config(text='Criptografado: '+ArrayBitsToStringBits(cript_array))
-            text_lineCode.config(text='2B1Q (V): '+str(lineCode_array))
-            if(canvas!=None):
-                canvas.get_tk_widget().destroy()
-            canvas = Show2B1Q(text_frame,lineCode_array)
-            window.geometry('400x500')
-    except socket.timeout:
-        window.update()
+    global canvas, isConnected,fig,lineCodeArray
     
-    window.after(200,Receive)
-            
+    while( (not isConnected) and isRunning):
+        try:
+            client.connect((host,PORT))
+            isConnected=True
+            print("Conectou-se")
+        except: 
+            print("Não conseguiu conectar")
+    while(isConnected and isRunning):
+        try:
+            pack = client.recv(2048)
+            if(pack):
+                lineCode_array = UnpackData(pack)
+                cript_array = Decode2B1Q(lineCode_array)
+                binary_array = cript_array
+                text = ToString(binary_array)
+                text_text.config(text="Texto: "+text)
+                text_bin.config(text='Binário: '+ArrayBitsToStringBits(binary_array))
+                text_cript.config(text='Criptografado: '+ArrayBitsToStringBits(cript_array))
+                text_lineCode.config(text='2B1Q (V): '+str(lineCode_array))
+                window.geometry('400x500')
+                lineCodeArray=lineCode_array
 
-            
-        
-    
+        except:
+            pass
+     
 window = tk.Tk()
 
 window.geometry('400x130')

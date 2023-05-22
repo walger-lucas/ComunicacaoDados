@@ -17,7 +17,4 @@ def Show2B1Q(window,array2b1q=[]):
     time = np.arange(0,lenght*bit_duration,bit_duration/n)
     ax.plot(time,wave)
     ax.set(xlabel='Tempo',ylabel='Volts',title='2B1Q')
-    canvas = FigureCanvasTkAgg(fig,window)
-    canvas.draw()
-    canvas.get_tk_widget().pack()
-    return canvas
+    return fig
