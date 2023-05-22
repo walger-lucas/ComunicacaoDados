@@ -6,6 +6,7 @@ class Client:
         self.PORT = PORT
         self.skt= socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         self.isConnected = False
+        self.skt.settimeout(1)
     
     def TryConnection(self):
         if(not self.isConnected):
@@ -25,7 +26,8 @@ class Client:
     def ReceiveData(self,size=1024):
         if( self.isConnected):
             data = self.skt.recv(size)
-            print('Dados recebidos para {}:{}'.format(self.HOST,self.PORT))
+            if(data):
+                print('Dados recebidos de {}:{}'.format(self.HOST,self.PORT))
             return data
         else:
             print('Não consegue-se enviar dados sem conexão.')

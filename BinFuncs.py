@@ -4,7 +4,7 @@ def ToBinary(word):
     l =[]
     bits_string =''
     for i in word:
-        l.append(ord(i))
+        l.append(bin(ord(i))[2:].zfill(8))
     for i in l:
         bits_string+=i
     bits_array= []
@@ -19,8 +19,11 @@ def ArrayBitsToStringBits(bits_array=[]):
         s+=str(i)
     return s
 
-    
-
+def ToString(bin_array=[]):
+    text =''
+    for i in range(0,len(bin_array),8):
+        text+= chr(bin_array[i]*128+bin_array[i+1]*64+bin_array[i+2]*32+bin_array[i+3]*16+bin_array[i+4]*8+bin_array[i+5]*4+bin_array[i+6]*2+bin_array[i+7]*1)
+    return text
 
 ENCONDING_2B1Q_NEG=[-1,-3,1,3] #Tensão para cada indexador 00: -3, 01: -1, 10: 1, 11:3, em caso do último ser negativo
 ENCONDING_2B1Q_POS=[1,3,-1,-3] #Tensão para cada indexador 00: 3, 01: 1, 10: -1, 11:-3, em caso do último ser positivo
