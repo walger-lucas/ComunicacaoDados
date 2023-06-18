@@ -109,7 +109,33 @@ def Iniciar():
         textButton.pack_forget()
         thread2 = threading.Thread(target=Receive)
         thread2.start()
-    
+
+def encrypt_caesar_cipher(text):
+    encrypted_text = ""
+    for char in text:
+        if ord(char) >= 32 and ord(char) <= 126:  # Check if character is in the printable ASCII range
+            ascii_offset = 32  # Start of the printable ASCII range
+            shifted = (ord(char) - ascii_offset + 1) % 95 + ascii_offset  # Range of printable ASCII is 95
+            encrypted_char = chr(shifted)
+            encrypted_text += encrypted_char
+        else:
+            encrypted_text += char
+    return encrypted_text
+
+def decrypt_caesar_cipher(text):
+    decrypted_text = ""
+    for char in text:
+        if ord(char) >= 32 and ord(char) <= 126:  # Check if character is in the printable ASCII range
+            ascii_offset = 32  # Start of the printable ASCII range
+            shifted = (ord(char) - ascii_offset - 1) % 95 + ascii_offset  # Range of printable ASCII is 95
+            decrypted_char = chr(shifted)
+            decrypted_text += decrypted_char
+        else:
+            decrypted_text += char
+    return decrypted_text
+
+criptography=True
+
 # Envia os dados, e atualiza o display
 def Send():
     global canvas, isConnected, fig, lineCodeArray
@@ -117,11 +143,21 @@ def Send():
     textText.config(text="Texto: "+text)
     
     binaryArray = ToBinary(text)
-    criptArray = binaryArray # MUDAR QUANDO HAVER CRIPTOGRAFIA
-    lineCode_array = Encode2B1Q(criptArray)
+
+    if criptography:
+        criptArray = ToBinary(encrypt_caesar_cipher(text)) 
+        lineCode_array = Encode2B1Q(criptArray)
+    
+    else:
+        lineCode_array = Encode2B1Q(binaryArray)
+
     textBin.config(text='Binário: '+ArrayBitsToStringBits(binaryArray))
-    textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
+
+    if criptography:
+        textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
+
     textLineCode.config(text='2B1Q (V): '+str(lineCode_array))
+
     if isConnected:
         pack = PackData(lineCode_array)
         try:
@@ -144,6 +180,7 @@ def Receive():
             print("Conectou-se")
         except: 
             print("Não conseguiu conectar")
+            
     while(isConnected and isRunning):
         try:
             pack = client.recv(2048)
@@ -151,10 +188,14 @@ def Receive():
                 lineCodeArray = UnpackData(pack)
                 criptArray = Decode2B1Q(lineCodeArray)
                 binaryArray = criptArray
-                text = ToString(binaryArray)
+                if criptography:
+                    text = decrypt_caesar_cipher(ToString(binaryArray))
+                else:
+                    text = ToString(binaryArray)
                 textText.config(text="Texto: "+text)
                 textBin.config(text='Binário: '+ArrayBitsToStringBits(binaryArray))
-                textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
+                if criptography:
+                    textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
                 textLineCode.config(text='2B1Q (V): '+str(lineCodeArray))
                 window.geometry('400x500')
                 lineCodeArray=lineCodeArray
@@ -218,6 +259,3 @@ ipFrame.pack()
 
 # Inicialização do loop principal
 window.mainloop()
-
-
-
