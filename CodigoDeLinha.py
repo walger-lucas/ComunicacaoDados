@@ -113,9 +113,9 @@ def Iniciar():
 def encrypt_caesar_cipher(text):
     encrypted_text = ""
     for char in text:
-        if ord(char) >= 32 and ord(char) <= 126:  # Check if character is in the printable ASCII range
+        if ord(char) >= 32 and ord(char) <= 255:  # Check if character is in the printable ASCII range
             ascii_offset = 32  # Start of the printable ASCII range
-            shifted = (ord(char) - ascii_offset + 1) % 95 + ascii_offset  # Range of printable ASCII is 95
+            shifted = (ord(char) - ascii_offset + 1) % 224 + ascii_offset  # Range of printable ASCII is 95
             encrypted_char = chr(shifted)
             encrypted_text += encrypted_char
         else:
@@ -125,9 +125,9 @@ def encrypt_caesar_cipher(text):
 def decrypt_caesar_cipher(text):
     decrypted_text = ""
     for char in text:
-        if ord(char) >= 32 and ord(char) <= 126:  # Check if character is in the printable ASCII range
+        if ord(char) >= 32 and ord(char) <= 255:  # Check if character is in the printable ASCII range
             ascii_offset = 32  # Start of the printable ASCII range
-            shifted = (ord(char) - ascii_offset - 1) % 95 + ascii_offset  # Range of printable ASCII is 95
+            shifted = (ord(char) - ascii_offset - 1) % 224 + ascii_offset  # Range of printable ASCII is 95
             decrypted_char = chr(shifted)
             decrypted_text += decrypted_char
         else:
@@ -154,7 +154,8 @@ def Send():
 
     if criptography.get():
         textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
-
+    else:
+        textCript.config(text='Sem Criptografia')
     textLineCode.config(text='2B1Q (V): '+str(lineCode_array))
 
     if isConnected:
@@ -186,15 +187,17 @@ def Receive():
             if(pack):
                 lineCodeArray = UnpackData(pack)
                 criptArray = Decode2B1Q(lineCodeArray)
-                binaryArray = criptArray
                 if criptography.get():
-                    text = decrypt_caesar_cipher(ToString(binaryArray))
+                    text = decrypt_caesar_cipher(ToString(criptArray))
                 else:
-                    text = ToString(binaryArray)
+                    text = ToString(criptArray)
+                binaryArray = ToBinary(text)
                 textText.config(text="Texto: "+text)
                 textBin.config(text='Binário: '+ArrayBitsToStringBits(binaryArray))
                 if criptography.get():
                     textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
+                else:
+                    textCript.config(text='Sem Criptografia')
                 textLineCode.config(text='2B1Q (V): '+str(lineCodeArray))
                 window.geometry('400x500')
                 lineCodeArray=lineCodeArray
