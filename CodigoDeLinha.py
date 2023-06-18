@@ -134,17 +134,16 @@ def decrypt_caesar_cipher(text):
             decrypted_text += char
     return decrypted_text
 
-criptography=True
 
 # Envia os dados, e atualiza o display
 def Send():
-    global canvas, isConnected, fig, lineCodeArray
+    global canvas, isConnected, fig, lineCodeArray, criptography
     text = textEntry.get()
     textText.config(text="Texto: "+text)
     
     binaryArray = ToBinary(text)
 
-    if criptography:
+    if criptography.get():
         criptArray = ToBinary(encrypt_caesar_cipher(text)) 
         lineCode_array = Encode2B1Q(criptArray)
     
@@ -153,7 +152,7 @@ def Send():
 
     textBin.config(text='Binário: '+ArrayBitsToStringBits(binaryArray))
 
-    if criptography:
+    if criptography.get():
         textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
 
     textLineCode.config(text='2B1Q (V): '+str(lineCode_array))
@@ -171,7 +170,7 @@ def Send():
 
 # Tenta receber os dados e mostrá-los em tela a cada 200ms.
 def Receive():
-    global canvas, isConnected,fig,lineCodeArray
+    global canvas, isConnected,fig,lineCodeArray, criptography
     
     while( (not isConnected) and isRunning):
         try:
@@ -188,13 +187,13 @@ def Receive():
                 lineCodeArray = UnpackData(pack)
                 criptArray = Decode2B1Q(lineCodeArray)
                 binaryArray = criptArray
-                if criptography:
+                if criptography.get():
                     text = decrypt_caesar_cipher(ToString(binaryArray))
                 else:
                     text = ToString(binaryArray)
                 textText.config(text="Texto: "+text)
                 textBin.config(text='Binário: '+ArrayBitsToStringBits(binaryArray))
-                if criptography:
+                if criptography.get():
                     textCript.config(text='Criptografado: '+ArrayBitsToStringBits(criptArray))
                 textLineCode.config(text='2B1Q (V): '+str(lineCodeArray))
                 window.geometry('400x500')
@@ -231,15 +230,19 @@ buttonAccept=tk.Button(ipFrame,text='Conectar',command=Iniciar)
 
 # Tela de adição de dados Envio
 textFrame = tk.Frame(window)
+criptography=tk.BooleanVar() # Bool que controla criptografia
+criptography.set(False)
+selectCriptography = tk.Checkbutton(textFrame,variable=criptography,offvalue=False,onvalue=True,text="Criptografia")
 textLabel = tk.Label(textFrame,text='Adicione a palavra a enviar')
 textEntry = tk.Entry(textFrame)
 textText = tk.Label(textFrame,text='Texto: ')
 textBin= tk.Label(textFrame,text='Binário: ')
-textCript=tk.Label(textFrame,text='Criptogradado: ')
+textCript=tk.Label(textFrame,text='Criptografado: ')
 textLineCode = tk.Label(textFrame,text='2B1Q (V) : ')
 textButton = tk.Button(textFrame,text='Enviar',command=Send)
 
-# Adição de itens ao Frame, tela inicial
+# Adição de itens ao Frame, tela secundária
+selectCriptography.pack()
 textLabel.pack()
 textEntry.pack()
 textText.pack()
@@ -248,7 +251,7 @@ textCript.pack()
 textLineCode.pack()
 textButton.pack()
 
-# Adição de itens ao Frame, tela secundária
+# Adição de itens ao Frame, tela inicial
 options.pack()
 label.pack()
 entryId.pack()
