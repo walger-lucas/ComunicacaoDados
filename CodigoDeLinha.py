@@ -62,7 +62,7 @@ def CloseWindow():
     window.destroy()
 
 # Seleção de Cliente ou Server
-def selectionHandle(selection):
+def SelectionHandle(selection):
     global isServer
     if(selection == 'Server'):
         isServer=True
@@ -182,7 +182,7 @@ ipFrame = tk.Frame(window)
 selectedOption = tk.StringVar()
 selectedOption.set('Server')
 isServer=True # Booleano que controla seleção 
-options=tk.OptionMenu(ipFrame,selectedOption,"Server","Client",command=selectionHandle)
+options=tk.OptionMenu(ipFrame,selectedOption,"Server","Client",command=SelectionHandle)
 label = tk.Label(ipFrame,text='IPV4:')
 entryId = tk.Entry(ipFrame) # Entrada para IP
 entryId.insert(0,'127.0.0.1')
