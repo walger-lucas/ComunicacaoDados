@@ -1,9 +1,29 @@
 import tkinter as tk
+import numpy as np
+import matplotlib.pyplot as plt
 import socket
 import threading
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from Graph import *
 from BinFuncs import *
+
+## Gráfico
+
+# retorna fig do grafico
+def Show2B1Q(array2b1q=[]):
+    fig,ax=plt.subplots(figsize=(8,4)) # Faz subplot
+    lenght =len(array2b1q) # Tamanho de Array
+    n = 200 # samples por bit
+    bit_duration=1 # duração em s do bit
+    wave=np.array([]) # onda inicialização
+    for i in array2b1q:
+        bit_data= np.array([i]*n) # coloca o valor do array na posição n vezes
+        wave = np.concatenate((wave,bit_data)) # concatena
+    time = np.arange(0,lenght*bit_duration,bit_duration/n)
+    ax.plot(time,wave) # plota
+    ax.set(xlabel='Tempo',ylabel='Volts',title='2B1Q')
+    return fig
+
+## Comunicação e Display
 
 PORT = 55555
 host = 'localhost'
@@ -14,7 +34,7 @@ conn, ender = None, None
 isConnected,isRunning = False, True
 lineCodeArray = []
 
-#Mostra o Gráfico se houver data a mostrar, caso tenha mostrado, retira de coisas a mostrar
+# Mostra o Gráfico se houver data a mostrar, caso tenha mostrado, retira de coisas a mostrar
 def ShowLineCode():
     global isRunning,lineCodeArray,canvas,fig
     if lineCodeArray!=[]:
@@ -32,7 +52,7 @@ def ShowLineCode():
         window.after(200,ShowLineCode)
 
 
-#Fecha Janela
+# Fecha Janela
 def close_window():
     global isRunning
     print('Janela fechando')
@@ -51,14 +71,14 @@ def close_window():
         pass
     window.destroy()
 
-#Seleção de Cliente ou Server
+# Seleção de Cliente ou Server
 def selection_handle(selection):
     global isServer
     if(selection == 'Server'):
         isServer=True
     elif selection =='Client':
         isServer=False
-#Espera conexão do servidor
+# Espera conexão do servidor
 def WaitConnection():
     global conn, ender,server,isConnected
     while(isConnected==False and isRunning==True):
@@ -72,7 +92,7 @@ def WaitConnection():
             isConnected = False
             print("Nao conseguiu conexoes.")
 
-#Botão de conexão, prepara em caso de Server ou Client
+# Botão de conexão, prepara em caso de Server ou Client
 def Iniciar():
     global server,client,isServer,host
     host = entryId.get()
@@ -80,11 +100,11 @@ def Iniciar():
     text_frame.pack()
     ShowLineCode()
     window.update()
-    #Seta se será server ou cliente, e remove coisas desnecessárias
+    # Seta se será server ou cliente, e remove coisas desnecessárias
     if(isServer==True):
         try:
-            server = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #TCP
-            server.settimeout(5) #5s de timeout
+            server = socket.socket(socket.AF_INET,socket.SOCK_STREAM) # TCP
+            server.settimeout(5) # 5s de timeout
             server.bind((host,PORT))
             server.listen()
             thread1 = threading.Thread(target=WaitConnection)
@@ -107,7 +127,7 @@ def Send():
     text_text.config(text="Texto: "+text)
     
     binary_array = ToBinary(text)
-    cript_array = binary_array #MUDAR QUANDO HAVER CRIPTOGRAFIA
+    cript_array = binary_array # MUDAR QUANDO HAVER CRIPTOGRAFIA
     lineCode_array = Encode2B1Q(cript_array)
     text_bin.config(text='Binário: '+ArrayBitsToStringBits(binary_array))
     text_cript.config(text='Criptografado: '+ArrayBitsToStringBits(cript_array))
@@ -122,7 +142,7 @@ def Send():
             print("Nao conseguiu enviar o pacote.")
     window.geometry('400x500')
     lineCodeArray=lineCode_array
-#Tenta receber os dados e mostrá-los em tela a cada 200ms.
+# Tenta receber os dados e mostrá-los em tela a cada 200ms.
 def Receive():
     global canvas, isConnected,fig,lineCodeArray
     
@@ -158,7 +178,7 @@ window.geometry('400x130')
 window.protocol('WM_DELETE_WINDOW',close_window)
 
 
-#Tela inicial
+# Tela inicial
 ip_frame = tk.Frame(window)
 selected_option = tk.StringVar()
 selected_option.set('Server')
@@ -171,7 +191,7 @@ entryId.insert(0,'127.0.0.1')
 buttonAccept=tk.Button(ip_frame,text='Conectar',command=Iniciar)
 
 
-#Tela de adição de dados Envio
+# Tela de adição de dados Envio
 text_frame = tk.Frame(window)
 text_label = tk.Label(text_frame,text='Adicione a palavra a enviar')
 text_entry = tk.Entry(text_frame)
